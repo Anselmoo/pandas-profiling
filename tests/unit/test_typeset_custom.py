@@ -37,8 +37,9 @@ def get_profiling_series():
         "str_true_false_none": ["True", "False", None],
         # Numeric
         "num_with_inf": [1, 2, 3, 6, np.inf],
-        "integers": [1, 0, 0],
-        "integers_nan": [1, 0, np.nan],
+        "integers": [1, 0, 0, 0],
+        "inf_only": [np.inf],
+        "integers_nan": [1, 0, 1, 0, np.nan],
         # test Describe
         "id": [chr(97 + c) for c in range(1, 9)] + ["d"],
         "x": [50, 50, -10, 0, 0, 5, 15, -3, np.nan],
@@ -126,6 +127,7 @@ def get_profiling_series():
             (17, 18),
         ],
         "date_str": ["2018-01-01", "2017-02-01", "2018-04-07"],
+        "nullable_int": pd.Series([1, None], dtype="Int64"),
     }
 
     return [pd.Series(values, name=key) for key, values in data.items()]
@@ -134,6 +136,17 @@ def get_profiling_series():
 series = get_profiling_series()
 
 typeset = ProfilingTypeSet()
+
+class DataTest(object):
+    def __init__(self, name, contains_type, infer_type, cast_result=None):
+        self.name = name
+        self.contains_type = contains_type
+        self.infer_type = infer_type
+        self.cast_result = cast_result
+
+cases = [
+    DataTest("x", Numeric, Numeric),
+]
 
 contains_map = {
     Numeric: {
@@ -145,6 +158,8 @@ contains_map = {
         "integers_nan",
         "bool_01",
         "bool_01_with_nan",
+        "inf_only",
+        "nullable_int",
     },
     Categorical: {
         "id",
@@ -214,6 +229,8 @@ inference_map = {
     "mixed": Unsupported,
     "dict": Unsupported,
     "tuple": Unsupported,
+    "inf_only": Numeric,
+    "nullable_int": Numeric,
 }
 
 
@@ -225,7 +242,7 @@ def test_inference(series, type, typeset, difference):
         series: the series to test
         type: the type to test against
     """
-    config["vars"]["num"]["low_categorical_threshold"].set(0)
+    config["vars"]["num"]["low_categorical_threshold"].set(2)
     result, message = infers(series, type, typeset, difference)
     assert result, message
 
