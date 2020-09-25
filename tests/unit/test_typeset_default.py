@@ -1,5 +1,14 @@
 import pandas as pd
 import pytest
+from visions.test.series import get_series
+from visions.test.utils import (
+    contains,
+    convert,
+    get_contains_cases,
+    get_convert_cases,
+    get_inference_cases,
+    infers,
+)
 
 from pandas_profiling.config import config
 from pandas_profiling.model.typeset import (
@@ -9,15 +18,6 @@ from pandas_profiling.model.typeset import (
     Numeric,
     ProfilingTypeSet,
     Unsupported,
-)
-from tests.unit.utils import (
-    contains,
-    convert,
-    get_contains_cases,
-    get_convert_cases,
-    get_inference_cases,
-    get_series,
-    infers,
 )
 
 series = get_series()
@@ -60,7 +60,6 @@ contains_map = {
         "timestamp_string_series",
         "string_with_sep_num_nan",
         "string_series",
-        "geometry_string_series",
         "string_unicode_series",
         "string_np_unicode_series",
         "path_series_linux_str",
@@ -83,6 +82,7 @@ contains_map = {
         "email_address_str",
         "str_float_non_leading_zeros",
         "str_int_zeros",
+        "str_complex_nan",
     },
     Boolean: {
         "bool_series",
@@ -105,6 +105,7 @@ if int(pd.__version__[0]) >= 1:
     contains_map[Categorical].add("string_dtype_series")
 
 contains_map[Unsupported] = {
+    "module",
     "nan_series",
     "nan_series_2",
     "timedelta_series",
@@ -135,7 +136,13 @@ contains_map[Unsupported] = {
     "empty",
     "empty_bool",
     "empty_float",
+    "empty_object",
     "empty_int64",
+    "ip",
+    "ip_missing",
+    "ip_mixed_v4andv6",
+    "email_address_missing",
+    "email_address",
 }
 
 
@@ -209,7 +216,6 @@ inference_map = {
     "timedelta_series": Unsupported,
     "timedelta_series_nat": Unsupported,
     "timedelta_negative": Unsupported,
-    "geometry_string_series": Categorical,
     "geometry_series_missing": Unsupported,
     "geometry_series": Unsupported,
     "path_series_linux": Unsupported,
@@ -233,6 +239,7 @@ inference_map = {
     "empty_float": Unsupported,
     "empty_bool": Unsupported,
     "empty_int64": Unsupported,
+    "empty_object": Unsupported,
     "ip": Unsupported,
     "ip_str": Categorical,
     "ip_missing": Unsupported,
@@ -255,6 +262,9 @@ inference_map = {
     "str_float_non_leading_zeros": Numeric,
     "str_int_zeros": Numeric,
     "email_address_str": Categorical,
+    "str_complex_nan": Categorical,
+    "email_address": Unsupported,
+    "email_address_missing": Unsupported,
 }
 if int(pd.__version__[0]) >= 1:
     inference_map["string_dtype_series"] = Categorical

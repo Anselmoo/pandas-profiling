@@ -3,6 +3,14 @@ import datetime
 import numpy as np
 import pandas as pd
 import pytest
+from visions.test.utils import (
+    contains,
+    convert,
+    get_contains_cases,
+    get_convert_cases,
+    get_inference_cases,
+    infers,
+)
 
 from pandas_profiling.config import config
 from pandas_profiling.model.typeset import (
@@ -12,14 +20,6 @@ from pandas_profiling.model.typeset import (
     Numeric,
     ProfilingTypeSet,
     Unsupported,
-)
-from tests.unit.utils import (
-    contains,
-    convert,
-    get_contains_cases,
-    get_convert_cases,
-    get_inference_cases,
-    infers,
 )
 
 

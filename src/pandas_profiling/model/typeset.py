@@ -9,6 +9,7 @@ from pandas.api import types as pdt
 from visions import VisionsBaseType, VisionsTypeset
 from visions.relations import IdentityRelation, InferenceRelation
 from visions.utils import nullable_series_contains
+from visions.utils.series_utils import series_not_empty
 
 from pandas_profiling.config import config
 from pandas_profiling.model.typeset_relations import (
@@ -42,11 +43,12 @@ class Numeric(VisionsBaseType):
 
     @classmethod
     @nullable_series_contains
-    def contains_op(cls, series: pd.Series) -> bool:
+    @series_not_empty
+    def contains_op(cls, series: pd.Series, state: dict) -> bool:
         return pdt.is_numeric_dtype(series) and not pdt.is_bool_dtype(series)
 
 
-def is_date(series):
+def is_date(series, state):
     try:
         _ = pd.to_datetime(series)
         return True
@@ -69,7 +71,7 @@ class DateTime(VisionsBaseType):
         ]
 
     @classmethod
-    def contains_op(cls, series: pd.Series) -> bool:
+    def contains_op(cls, series: pd.Series, state: dict) -> bool:
         return pdt.is_datetime64_any_dtype(series)
 
 
@@ -87,8 +89,9 @@ class Categorical(VisionsBaseType):
         ]
 
     @classmethod
+    @series_not_empty
     @nullable_series_contains
-    def contains_op(cls, series: pd.Series) -> bool:
+    def contains_op(cls, series: pd.Series, state: dict) -> bool:
         is_valid_dtype = pdt.is_categorical_dtype(series) and not pdt.is_bool_dtype(
             series
         )
@@ -108,14 +111,15 @@ class Boolean(VisionsBaseType):
                 cls,
                 Categorical,
                 relationship=string_is_bool,
-                transformer=lambda s: to_bool(string_to_bool(s)),
+                transformer=lambda s, st: to_bool(string_to_bool(s, st)),
             ),
             # TODO: optional numeric
         ]
 
     @classmethod
+    @series_not_empty
     @nullable_series_contains
-    def contains_op(cls, series: pd.Series) -> bool:
+    def contains_op(cls, series: pd.Series, state: dict) -> bool:
         if pdt.is_object_dtype(series):
             try:
                 return series.isin({True, False}).all()
@@ -133,7 +137,7 @@ class URL(VisionsBaseType):
 
     @classmethod
     @nullable_series_contains
-    def contains_op(cls, series: pd.Series) -> bool:
+    def contains_op(cls, series: pd.Series, state: dict) -> bool:
         # TODO: use coercion utils
         try:
             url_gen = (urlparse(x) for x in series)
@@ -150,7 +154,7 @@ class Path(VisionsBaseType):
 
     @classmethod
     @nullable_series_contains
-    def contains_op(cls, series: pd.Series) -> bool:
+    def contains_op(cls, series: pd.Series, state: dict) -> bool:
         # TODO: use coercion utils
         try:
             return all(os.path.isabs(p) for p in series)
@@ -166,7 +170,7 @@ class File(VisionsBaseType):
 
     @classmethod
     @nullable_series_contains
-    def contains_op(cls, series: pd.Series) -> bool:
+    def contains_op(cls, series: pd.Series, state: dict) -> bool:
         return all(os.path.exists(p) for p in series)
 
 
@@ -178,7 +182,7 @@ class Image(VisionsBaseType):
 
     @classmethod
     @nullable_series_contains
-    def contains_op(cls, series: pd.Series) -> bool:
+    def contains_op(cls, series: pd.Series, state: dict) -> bool:
         return all(imghdr.what(p) for p in series)
 
 
@@ -189,7 +193,7 @@ class Complex(VisionsBaseType):
 
     @classmethod
     @nullable_series_contains
-    def contains_op(cls, series: pd.Series) -> bool:
+    def contains_op(cls, series: pd.Series, state: dict) -> bool:
         return pdt.is_complex_dtype(series)
 
 
